@@ -8,6 +8,7 @@ from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 from xhtml2pdf.util import pisaTempFile, getBox, pyPdf
 import cgi
 import logging
+import copy
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -141,6 +142,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
 
                 output = pyPdf.PdfFileWriter()
                 input1 = pyPdf.PdfFileReader(istream)
+                duplicate_input1 = copy.copy(input1)
                 ctr = 0
                 # TODO: Why do we loop over the same list again?
                 # see bgouter at line 137
@@ -150,8 +152,9 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                         and (bg.mimetype=="application/pdf")):
                         bginput = pyPdf.PdfFileReader(bg.getFile())
                         pagebg = bginput.getPage(0)
-                        pagebg.mergePage(page)
-                        page = pagebg
+                        original_page = duplicate_input1.getPage(ctr)
+                        page.mergePage(pagebg)
+                        page.mergePage(original_page)
                     else:
                         log.warn(context.warning(
                                 "Background PDF %s doesn't exist.", bg))
