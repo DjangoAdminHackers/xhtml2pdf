@@ -26,24 +26,25 @@ import copy
 
 log = logging.getLogger("xhtml2pdf")
 
+
 def pisaErrorDocument(dest, c):
     out = pisaTempFile(capacity=c.capacity)
     out.write("<p style='background-color:red;'><strong>%d error(s) occured:</strong><p>" % c.err)
     for mode, line, msg, _ in c.log:
-        if mode=="error":
+        if mode == "error":
             out.write("<pre>%s in line %d: %s</pre>" % (mode, line, cgi.escape(msg)))
 
     out.write("<p><strong>%d warning(s) occured:</strong><p>" % c.warn)
     for mode, line, msg, _ in c.log:
-        if mode=="warning":
+        if mode == "warning":
             out.write("<p>%s in line %d: %s</p>" % (mode, line, cgi.escape(msg)))
 
     return pisaDocument(out.getvalue(), dest, raise_exception=False)
 
+
 def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
               xhtml=False, encoding=None, context=None, xml_output=None,
               **kw):
-
     # Prepare Context
     if not context:
         context = pisaContext(path, debug=debug)
@@ -58,7 +59,10 @@ def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
 
     # Avoid empty documents
     if not context.story:
-        context.story = [Spacer(1,1)]
+        context.story = [Spacer(1, 1)]
+
+    if context.indexing_story:
+        context.story.append(context.indexing_story)
 
     # Remove anchors if they do not exist (because of a bug in Reportlab)
     for frag, anchor in context.anchorFrag:
@@ -66,16 +70,16 @@ def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
             frag.link = None
     return context
 
+
 def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                  default_css=None, xhtml=False, encoding=None, xml_output=None,
-                 raise_exception=True, capacity=100*1024, **kw):
-
+                 raise_exception=True, capacity=100 * 1024, **kw):
     log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r",
-        src,
-        dest,
-        path,
-        link_callback,
-        xhtml)
+              src,
+              dest,
+              path,
+              link_callback,
+              xhtml)
 
     # Prepare simple context
     context = pisaContext(path, debug=debug, capacity=capacity)
@@ -100,7 +104,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
         allowSplitting=1)
 
     # Prepare templates and their frames
-    if context.templateList.has_key("body"):
+    if "body" in context.templateList:
         body = context.templateList["body"]
         del context.templateList["body"]
     else:
@@ -114,24 +118,15 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                       rightPadding=0,
                       bottomPadding=0,
                       topPadding=0)],
-            pagesize = context.pageSize)
+            pagesize=context.pageSize)
 
     doc.addPageTemplates([body] + context.templateList.values())
-
-    # handle counting pages properly (to allow "page X/Y" stuff)
-    doc._pisa_page_counter = 0
-    def _page_counter(page_no):
-        doc._pisa_page_counter += 1
-
-    doc.setPageCallBack(_page_counter)
 
     # Use multibuild e.g. if a TOC has to be created
     if context.multiBuild:
         doc.multiBuild(context.story)
     else:
         doc.build(context.story)
-
-    context._pisa_page_counter = doc._pisa_page_counter
 
     # Add watermarks
     if pyPdf:
@@ -149,7 +144,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                 for bg in context.pisaBackgroundList:
                     page = input1.getPage(ctr)
                     if (bg and not bg.notFound()
-                        and (bg.mimetype=="application/pdf")):
+                        and (bg.mimetype == "application/pdf")):
                         bginput = pyPdf.PdfFileReader(bg.getFile())
                         pagebg = bginput.getPage(0)
                         original_page = duplicate_input1.getPage(ctr)
@@ -157,7 +152,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                         page.mergePage(original_page)
                     else:
                         log.warn(context.warning(
-                                "Background PDF %s doesn't exist.", bg))
+                            "Background PDF %s doesn't exist.", bg))
                     output.addPage(page)
                     ctr += 1
                 out = pisaTempFile(capacity=context.capacity)
@@ -176,7 +171,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
         dest = pisaTempFile(capacity=context.capacity)
     context.dest = dest
 
-    data = out.getvalue() # TODO: That load all the tempfile in RAM - Why bother with a swapping tempfile then?
-    context.dest.write(data) # TODO: context.dest is a tempfile as well...
+    data = out.getvalue()  # TODO: That load all the tempfile in RAM - Why bother with a swapping tempfile then?
+    context.dest.write(data)  # TODO: context.dest is a tempfile as well...
 
     return context
