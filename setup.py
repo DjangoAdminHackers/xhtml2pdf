@@ -27,15 +27,15 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
 setup(
     name="xhtml2pdf",
-    version="0.0.5",
+    version="0.0.6",
     description="PDF generator using HTML and CSS",
     license="Apache License 2.0",
     author="Dirk Holtwick",
-    maintainer="Christopher Glass",
-    maintainer_email="tribaal@gmail.com",
+    maintainer="Daryl Yu",
+    maintainer_email="hello+pleaseleavemealone@darylyu.com",
     url="http://www.xhtml2pdf.com",
     keywords="PDF, HTML, XHTML, XML, CSS",
-    install_requires = ["html5lib", "pyPdf2", "Pillow", "reportlab"],
+    install_requires = ["html5lib", "pyPdf2", "Pillow", "reportlab>=2.2"],
     include_package_data=True,
     packages=find_packages(exclude=["tests", "tests.*"]),
     #    test_suite = "tests", They're not even working yet
